@@ -418,42 +418,32 @@ function setVideoProgress(percent,text){
 
 
 
-async function getVideoConverter(){
+async function getVideoConverter() {
 
-
-  if(videoFfmpeg){
-
+  if (videoFfmpeg) {
     return videoFfmpeg;
-
   }
 
 
-
-  if(!navigator.onLine){
-
+  if (!navigator.onLine) {
     throw new Error(
       "You are offline. Connect to the internet once so FFmpeg can load."
     );
-
   }
-
 
 
   videoResult.textContent =
     "Loading FFmpeg engine...";
 
 
-
   const [
-    {FFmpeg},
-    {toBlobURL}
+    { FFmpeg },
+    { toBlobURL }
   ] = await Promise.all([
-
 
     import(
       "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js"
     ),
-
 
     import(
       "https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js"
@@ -462,26 +452,17 @@ async function getVideoConverter(){
   ]);
 
 
-
-  const ffmpeg =
-    new FFmpeg();
-
+  const ffmpeg = new FFmpeg();
 
 
   ffmpeg.on(
     "progress",
-    ({progress})=>{
+    ({ progress }) => {
 
-      if(!Number.isFinite(progress))
-        return;
-
+      if (!Number.isFinite(progress)) return;
 
       const percent =
-        Math.min(
-          100,
-          progress * 100
-        );
-
+        Math.min(100, progress * 100);
 
       setVideoProgress(
         percent,
@@ -492,40 +473,60 @@ async function getVideoConverter(){
   );
 
 
+  const ffmpegBase =
+    "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm";
 
-  const baseURL =
+
+  const coreBase =
     "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd";
 
+
+  videoResult.textContent =
+    "Preparing FFmpeg worker...";
+
+
+  const workerURL =
+    await toBlobURL(
+      `${ffmpegBase}/worker.js`,
+      "text/javascript"
+    );
+
+
+  const coreURL =
+    await toBlobURL(
+      `${coreBase}/ffmpeg-core.js`,
+      "text/javascript"
+    );
+
+
+  const wasmURL =
+    await toBlobURL(
+      `${coreBase}/ffmpeg-core.wasm`,
+      "application/wasm"
+    );
+
+
+  videoResult.textContent =
+    "Starting FFmpeg...";
 
 
   await ffmpeg.load({
 
-    coreURL:
-      await toBlobURL(
-        `${baseURL}/ffmpeg-core.js`,
-        "text/javascript"
-      ),
+    workerURL,
 
+    coreURL,
 
-    wasmURL:
-      await toBlobURL(
-        `${baseURL}/ffmpeg-core.wasm`,
-        "application/wasm"
-      )
+    wasmURL
 
   });
 
 
-
-  videoFfmpeg =
-    ffmpeg;
-
+  videoFfmpeg = ffmpeg;
 
 
   return ffmpeg;
 
 }
-
 
 
 
