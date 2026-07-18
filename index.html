@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Local Convert — image &amp; video converter</title>
+<meta name="description" content="Convert JPG, PNG, WebP, MP4 and WebM files entirely in your browser. Nothing is uploaded anywhere.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="site-head">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <span class="dot"></span>
+      </span>
+      <span class="brand-name">Local Convert</span>
+    </div>
+    <div class="runs-here">
+      <span class="pulse" aria-hidden="true"></span>
+      runs on this device — nothing leaves your browser
+    </div>
+  </header>
+
+  <main>
+    <section class="intro">
+      <h1>Convert images and video<br>without sending them anywhere.</h1>
+      <p>
+        JPG, PNG, WebP, MP4 and WebM, converted using your browser's own
+        decoders and encoders. Files never touch a server — not for the
+        conversion, not for storage. Close the tab and it's like it never
+        happened.
+      </p>
+    </section>
+
+    <section class="drop-wrap">
+      <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Add files to convert">
+        <svg class="drop-icon" width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+          <path d="M20 6V26M20 6L13 13M20 6L27 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M6 26V30C6 31.1046 6.89543 32 8 32H32C33.1046 32 34 31.1046 34 30V26" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <p class="drop-primary">Drop files here, or <span class="drop-link">browse</span></p>
+        <p class="drop-secondary">.jpg · .png · .webp · .mp4 · .webm</p>
+        <input id="file-input" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.mp4,.webm,image/jpeg,image/png,image/webp,video/mp4,video/webm" hidden>
+      </div>
+    </section>
+
+    <section id="queue-section" class="queue-section" hidden>
+      <div class="queue-head">
+        <h2>Queue</h2>
+        <div class="queue-actions">
+          <button id="convert-all" class="btn btn-primary">Convert all</button>
+          <button id="clear-all" class="btn btn-ghost">Clear</button>
+        </div>
+      </div>
+      <ul id="queue-list" class="queue-list"></ul>
+    </section>
+
+    <section id="support-note" class="support-note" hidden>
+      <p>
+        Your browser doesn't support in-browser video encoding
+        (<code>WebCodecs</code>), so video conversion is unavailable here.
+        Image conversion still works fine. Try a recent version of Chrome,
+        Edge, or Safari for video.
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-foot">
+    <p>
+      Image conversion via the Canvas API. Video conversion via
+      <a href="https://mediabunny.dev" target="_blank" rel="noopener">mediabunny</a>,
+      loaded from a CDN — no upload, no wasm binary in this repo.
+    </p>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
