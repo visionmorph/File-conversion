@@ -447,8 +447,7 @@ async function getVideoConverter(){
   const [
     {FFmpeg},
     {toBlobURL}
-  ] =
-  await Promise.all([
+  ] = await Promise.all([
 
 
     import(
@@ -457,7 +456,7 @@ async function getVideoConverter(){
 
 
     import(
-      "https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.10/dist/esm/index.js"
+      "https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js"
     )
 
   ]);
