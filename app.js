@@ -701,25 +701,21 @@ videoConvertButton.addEventListener(
 
     }catch(error){
 
+  console.error("FFmpeg error:", error);
 
-      console.error(error);
+  videoResult.textContent =
+    "Error: " + (
+      error.message ||
+      error
+    );
 
+  videoResult.classList.add(
+    "is-error"
+  );
 
-      videoResult.textContent =
-        error.message ||
-        "The video could not be converted.";
+  videoProgress.hidden=true;
 
-
-      videoResult.classList.add(
-        "is-error"
-      );
-
-
-      videoProgress.hidden=true;
-
-
-
-    }finally{
+  }finally{
 
 
       videoConvertButton.disabled=false;
