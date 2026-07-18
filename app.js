@@ -425,15 +425,8 @@ async function getVideoConverter() {
   }
 
 
-  if (!navigator.onLine) {
-    throw new Error(
-      "You are offline. Connect to the internet once so FFmpeg can load."
-    );
-  }
-
-
   videoResult.textContent =
-    "Loading FFmpeg engine...";
+    "Loading FFmpeg...";
 
 
   const [
@@ -461,8 +454,7 @@ async function getVideoConverter() {
 
       if (!Number.isFinite(progress)) return;
 
-      const percent =
-        Math.min(100, progress * 100);
+      const percent = progress * 100;
 
       setVideoProgress(
         percent,
@@ -473,46 +465,42 @@ async function getVideoConverter() {
   );
 
 
-  const ffmpegBase =
+  const ffmpegURL =
     "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm";
 
 
-  const coreBase =
+  const coreURLBase =
     "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd";
 
 
   videoResult.textContent =
-    "Preparing FFmpeg worker...";
+    "Preparing worker...";
 
 
   const workerURL =
     await toBlobURL(
-      `${ffmpegBase}/worker.js`,
+      `${ffmpegURL}/worker.js`,
       "text/javascript"
     );
 
 
   const coreURL =
     await toBlobURL(
-      `${coreBase}/ffmpeg-core.js`,
+      `${coreURLBase}/ffmpeg-core.js`,
       "text/javascript"
     );
 
 
   const wasmURL =
     await toBlobURL(
-      `${coreBase}/ffmpeg-core.wasm`,
+      `${coreURLBase}/ffmpeg-core.wasm`,
       "application/wasm"
     );
 
 
-  videoResult.textContent =
-    "Starting FFmpeg...";
-
-
   await ffmpeg.load({
 
-    workerURL,
+    classWorkerURL: workerURL,
 
     coreURL,
 
@@ -527,7 +515,6 @@ async function getVideoConverter() {
   return ffmpeg;
 
 }
-
 
 
 videoConvertButton.addEventListener(
