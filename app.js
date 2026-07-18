@@ -448,28 +448,11 @@ async function getVideoConverter() {
   const ffmpeg = new FFmpeg();
 
 
-  ffmpeg.on(
-    "progress",
-    ({ progress }) => {
-
-      if (!Number.isFinite(progress)) return;
-
-      const percent = progress * 100;
-
-      setVideoProgress(
-        percent,
-        `Converting ${percent.toFixed(0)}%`
-      );
-
-    }
-  );
-
-
-  const ffmpegURL =
+  const ffmpegBase =
     "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm";
 
 
-  const coreURLBase =
+  const coreBase =
     "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd";
 
 
@@ -477,25 +460,79 @@ async function getVideoConverter() {
     "Preparing worker...";
 
 
+  // Download worker files
+  const [
+    workerJS,
+    constJS,
+    errorsJS
+  ] = await Promise.all([
+
+    fetch(`${ffmpegBase}/worker.js`).then(r => r.text()),
+
+    fetch(`${ffmpegBase}/const.js`).then(r => r.text()),
+
+    fetch(`${ffmpegBase}/errors.js`).then(r => r.text())
+
+  ]);
+
+
+  // Convert dependencies into local blob URLs
+  const constURL =
+    URL.createObjectURL(
+      new Blob(
+        [constJS],
+        {type:"text/javascript"}
+      )
+    );
+
+
+  const errorsURL =
+    URL.createObjectURL(
+      new Blob(
+        [errorsJS],
+        {type:"text/javascript"}
+      )
+    );
+
+
+  // Rewrite worker imports
+  const patchedWorker =
+    workerJS
+      .replace(
+        'from "./const.js";',
+        `from "${constURL}";`
+      )
+      .replace(
+        'from "./errors.js";',
+        `from "${errorsURL}";`
+      );
+
+
   const workerURL =
-    await toBlobURL(
-      `${ffmpegURL}/worker.js`,
-      "text/javascript"
+    URL.createObjectURL(
+      new Blob(
+        [patchedWorker],
+        {type:"text/javascript"}
+      )
     );
 
 
   const coreURL =
     await toBlobURL(
-      `${coreURLBase}/ffmpeg-core.js`,
+      `${coreBase}/ffmpeg-core.js`,
       "text/javascript"
     );
 
 
   const wasmURL =
     await toBlobURL(
-      `${coreURLBase}/ffmpeg-core.wasm`,
+      `${coreBase}/ffmpeg-core.wasm`,
       "application/wasm"
     );
+
+
+  videoResult.textContent =
+    "Starting FFmpeg...";
 
 
   await ffmpeg.load({
