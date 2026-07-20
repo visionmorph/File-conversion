@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Local Convert — image &amp; video converter</title>
 <meta name="description" content="Convert JPG, PNG, WebP, MP4 and WebM files entirely in your browser. Nothing is uploaded anywhere.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -47,12 +50,21 @@
     <section id="queue-section" class="queue-section" hidden>
       <div class="queue-head">
         <h2>Queue</h2>
-        <div class="queue-actions">
-          <button id="convert-all" class="btn btn-primary">Convert all</button>
-          <button id="clear-all" class="btn btn-ghost">Clear</button>
-        </div>
       </div>
       <ul id="queue-list" class="queue-list"></ul>
+
+      <div class="btn-group-layer">
+        <button id="remove-all-btn" type="button" class="btn-layer btn-layer--01">
+          <span class="btn-label">Remove all</span>
+        </button>
+        <div class="btn-group-divider" aria-hidden="true"></div>
+        <button id="convert-files-btn" type="button" class="btn-layer btn-layer--02" data-mode="convert">
+          <span class="btn-label">Convert 0 files</span>
+          <svg class="btn-icon-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
     </section>
 
     <section id="support-note" class="support-note" hidden>
