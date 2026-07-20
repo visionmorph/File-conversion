@@ -21,7 +21,6 @@
   </header>
 
   <main>
-    
     <section class="intro">
       <h1>Private media conversion in your browser</h1>
       <h2>
@@ -33,35 +32,36 @@
         loaded from a CDN.
       </p>
     </section>
-    
+
     <section class="workspace">
-    <div class="drop-wrap">
-      <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Add files to convert">
-        <p class="drop-primary">Drag and drop files here or click to upload</p>
-        <input id="file-input" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.mp4,.webm,image/jpeg,image/png,image/webp,video/mp4,video/webm" hidden>
+      <h2>File upload</h2>
+      <div class="drop-wrap">
+        <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Add files to convert">
+          <p class="drop-primary">Drag and drop files here or click to upload</p>
+          <input id="file-input" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.mp4,.webm,image/jpeg,image/png,image/webp,video/mp4,video/webm" hidden>
+        </div>
       </div>
-    </div>
 
-    <section id="queue-section" class="queue-section" hidden>
-      <div class="queue-head">
-        <h2>Queue</h2>
-      </div>
-      <ul id="queue-list" class="queue-list"></ul>
+      <section id="queue-section" class="queue-section" hidden>
+        <div class="queue-head">
+          <h2>Files</h2>
+        </div>
+        <ul id="queue-list" class="queue-list"></ul>
 
-      <div class="btn-group-layer">
-        <button id="remove-all-btn" type="button" class="btn-layer btn-layer--01">
-          <span class="btn-label">Remove all</span>
-        </button>
-        <div class="btn-group-divider" aria-hidden="true"></div>
-        <button id="convert-files-btn" type="button" class="btn-layer btn-layer--02" data-mode="convert">
-          <span class="btn-label">Convert 0 files</span>
-          <svg class="btn-icon-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-      </div>
+        <div class="btn-group-layer">
+          <button id="remove-all-btn" type="button" class="btn-layer btn-layer--01">
+            <span class="btn-label">Remove all</span>
+          </button>
+          <div class="btn-group-divider" aria-hidden="true"></div>
+          <button id="convert-files-btn" type="button" class="btn-layer btn-layer--02" data-mode="convert">
+            <span class="btn-label">Convert 0 files</span>
+            <svg class="btn-icon-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </section>
     </section>
-</section>
   </main>
 
   <script type="module" src="app.js"></script>
