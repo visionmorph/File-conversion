@@ -206,7 +206,7 @@ function renderItem(item) {
   } else if (item.status === "error") {
     meta.innerHTML = `${formatBytes(item.file.size)} <span class="error-text">${escapeHtml(item.errorMessage)}</span>`;
   } else {
-    meta.textContent = `${formatBytes(item.file.size)} · .${item.ext}`;
+    meta.textContent = formatBytes(item.file.size);
   }
   info.appendChild(meta);
   li.appendChild(info);
