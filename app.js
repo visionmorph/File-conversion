@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------
-// Local Convert — all conversion happens in this browser tab.
+// File converter — all conversion happens in this browser tab.
 // Images: native Canvas API.
 // Video: mediabunny (https://mediabunny.dev), imported from a CDN
 //        as an ES module. It leans on the browser's own WebCodecs
@@ -168,18 +168,19 @@ function render() {
 function updateActionBar() {
   const total = items.size;
 
+  // Remove all stays enabled and functional throughout — a person
+  // should always be able to clear the queue, even mid-conversion.
+  removeAllBtn.disabled = false;
+
   if (queuePhase === "converting") {
-    removeAllBtn.disabled = true;
     convertFilesBtn.disabled = true;
     convertFilesBtn.dataset.mode = "converting";
     convertFilesLabel.textContent = "Converting files...";
   } else if (queuePhase === "done") {
-    removeAllBtn.disabled = false;
     convertFilesBtn.disabled = false;
     convertFilesBtn.dataset.mode = "download";
     convertFilesLabel.textContent = "Download all";
   } else {
-    removeAllBtn.disabled = false;
     convertFilesBtn.disabled = false;
     convertFilesBtn.dataset.mode = "convert";
     convertFilesLabel.textContent = `Convert ${total} file${total === 1 ? "" : "s"}`;
