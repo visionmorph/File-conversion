@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Local Convert — image &amp; video converter</title>
+<title>File converter — image &amp; video converter</title>
 <meta name="description" content="Convert JPG, PNG, WebP, MP4 and WebM files entirely in your browser. Nothing is uploaded anywhere.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,33 +16,26 @@
 
   <header class="site-head">
     <div class="brand">
-      <span class="brand-mark" aria-hidden="true">
-        <span class="dot"></span>
-      </span>
-      <span class="brand-name">Local Convert</span>
-    </div>
-    <div class="runs-here">
-      <span class="pulse" aria-hidden="true"></span>
-      runs on this device — nothing leaves your browser
+      <span class="brand-name">File converter</span>
     </div>
   </header>
 
   <main>
     <section class="intro">
       <h1>Private media conversion in your browser</h1>
-      <p>
+      <h2>
         Your files are processed locally on your device. Nothing is uploaded to a server, keeping your data private.
+      </h2>
+      <p>
+        Image conversion via the Canvas API. Video conversion via
+        <a href="https://mediabunny.dev/" target="_blank" rel="noopener">mediabunny</a>,
+        loaded from a CDN.
       </p>
     </section>
 
     <section class="drop-wrap">
       <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Add files to convert">
-        <svg class="drop-icon" width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
-          <path d="M20 6V26M20 6L13 13M20 6L27 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M6 26V30C6 31.1046 6.89543 32 8 32H32C33.1046 32 34 31.1046 34 30V26" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <p class="drop-primary">Drop files here, or <span class="drop-link">browse</span></p>
-        <p class="drop-secondary">.jpg · .png · .webp · .mp4 · .webm</p>
+        <p class="drop-primary">Drag and drop files here or click to upload</p>
         <input id="file-input" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.mp4,.webm,image/jpeg,image/png,image/webp,video/mp4,video/webm" hidden>
       </div>
     </section>
@@ -76,14 +69,6 @@
       </p>
     </section>
   </main>
-
-  <footer class="site-foot">
-    <p>
-      Image conversion via the Canvas API. Video conversion via
-      <a href="https://mediabunny.dev" target="_blank" rel="noopener">mediabunny</a>,
-      loaded from a CDN — no upload, no wasm binary in this repo.
-    </p>
-  </footer>
 
   <script type="module" src="app.js"></script>
 </body>
