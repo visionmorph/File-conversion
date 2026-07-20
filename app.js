@@ -49,7 +49,6 @@ const queueList = document.getElementById("queue-list");
 const removeAllBtn = document.getElementById("remove-all-btn");
 const convertFilesBtn = document.getElementById("convert-files-btn");
 const convertFilesLabel = convertFilesBtn.querySelector(".btn-label");
-const supportNote = document.getElementById("support-note");
 
 // Drives the two 64px layer buttons beneath the queue. Separate from
 // each item's own status so "all converted" can flip the group into
@@ -58,7 +57,6 @@ const supportNote = document.getElementById("support-note");
 let queuePhase = "idle";
 
 const videoSupported = typeof window.VideoEncoder !== "undefined" && typeof window.VideoDecoder !== "undefined";
-if (!videoSupported) supportNote.hidden = false;
 
 // ---------------------------------------------------------------
 // File intake
@@ -213,7 +211,10 @@ function renderItem(item) {
   info.appendChild(meta);
   li.appendChild(info);
 
-  // --- format select ---
+  // --- action (format select, then convert/download, then remove) ---
+  const action = document.createElement("div");
+  action.className = "item-action";
+
   const formatWrap = document.createElement("div");
   formatWrap.className = "item-format";
   const select = document.createElement("select");
@@ -232,20 +233,7 @@ function renderItem(item) {
     item.targetFormat = select.value;
   });
   formatWrap.appendChild(select);
-  li.appendChild(formatWrap);
-
-  // --- progress ---
-  const progressWrap = document.createElement("div");
-  progressWrap.className = "item-progress";
-  const bar = document.createElement("div");
-  bar.className = "item-progress-bar";
-  bar.style.width = `${Math.round(item.progress * 100)}%`;
-  progressWrap.appendChild(bar);
-  li.appendChild(progressWrap);
-
-  // --- action ---
-  const action = document.createElement("div");
-  action.className = "item-action";
+  action.appendChild(formatWrap);
 
   if (item.status === "done") {
     const a = document.createElement("a");
@@ -280,6 +268,16 @@ function renderItem(item) {
   action.appendChild(remove);
 
   li.appendChild(action);
+
+  // --- progress (flush against the bottom edge; only shown mid-convert) ---
+  const progressWrap = document.createElement("div");
+  progressWrap.className = "item-progress";
+  progressWrap.hidden = item.status !== "converting";
+  const bar = document.createElement("div");
+  bar.className = "item-progress-bar";
+  bar.style.width = `${Math.round(item.progress * 100)}%`;
+  progressWrap.appendChild(bar);
+  li.appendChild(progressWrap);
 
   return li;
 }
