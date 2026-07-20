@@ -7,6 +7,7 @@
   --surface-alt: #1a1e24;
   --border: #262b33;
   --border-soft: #1e222a;
+  --border-subtle-00: #343a3f;
 
   --text: #e8eaed;
   --text-muted: #8b929e;
@@ -23,6 +24,8 @@
 
   /* Button-component tokens (Carbon-style naming, per component spec) */
   --background-hover: rgba(141, 141, 141, 0.16); /* #8D8D8D @ 16% */
+  --background-inverse: #ffffff;
+  --text-inverse: #121619;
   --layer-01: #21272a;
   --layer-hover-01: #343a3f;
   --layer-02: #343a3f;
@@ -36,9 +39,6 @@
 
   --font-ui: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, monospace;
-
-  --radius: 10px;
-  --radius-sm: 6px;
 }
 
 * { box-sizing: border-box; }
@@ -89,7 +89,7 @@ code {
   display: flex;
   align-items: center;
   padding: 0 32px;
-  border-bottom: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-subtle-00);
 }
 
 .brand {
@@ -101,52 +101,35 @@ code {
 }
 
 /* ---------------------------------------------------------
-   Layout
+   Layout — intro (left) / workspace (right)
 --------------------------------------------------------- */
 main {
   position: relative;
   z-index: 1;
-  display: flex;
-  align-items: flex-start;
   flex: 1;
   width: 100%;
   margin: 0 auto;
+  padding: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0;
 }
 
-@media (max-width: 800px){
-
-    main{
-        flex-direction:column;
-    }
-
-    .workspace{
-        width:100%;
-        flex:auto;
-    }
-}
-
-.workspace{
-    display: flex;
-    flex-direction: column;
-    gap: 32px;
-    flex: 1;
-    padding: 32px;
-}
-
-.intro{
-    display: flex;
-    flex-direction: column;
-    gap: 32px;
-    flex: 1;
-    padding: 32px;
+.intro {
+  flex: 0 1 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 32px;
 }
 
 .intro h1 {
   font-size: 32px;
   line-height: 40px;
-  letter-spacing: -0.02em;
   font-weight: 400;
-  margin: 0px;
+  max-width: 420px;
+  margin: 0;
 }
 
 .intro h2 {
@@ -154,17 +137,33 @@ main {
   line-height: 28px;
   font-weight: 400;
   color: var(--text-primary);
-  margin: 0px;
+  max-width: 480px;
+  margin: 0;
 }
 
 .intro p {
   color: var(--text-primary);
   font-size: 14px;
   line-height: 18px;
-  margin: 0px;
+  max-width: 480px;
+  margin: 0;
 }
 
 .intro p a { color: var(--accent); }
+
+.workspace {
+  flex: 1;
+  min-width: 0;
+  border-left: 1px solid var(--border-subtle-00);
+  padding: 32px;
+  gap: 32px;
+  display: flex;
+  flex-direction: column;
+}
+
+.workspace > h2 {
+  margin: 0;
+}
 
 /* ---------------------------------------------------------
    Dropzone
@@ -209,12 +208,12 @@ main {
 /* ---------------------------------------------------------
    Queue
 --------------------------------------------------------- */
+
 .queue-head {
-  display: flex;
-  align-items: center;
-  margin-bottom: 0px;
   height: 48px;
   padding: 10px 0;
+  display: flex;
+  align-items: center;
 }
 
 /* ---------------------------------------------------------
@@ -247,15 +246,15 @@ main {
   bottom: calc(100% + 6px);
   left: 50%;
   transform: translateX(-50%) translateY(4px);
-  background: #ffffff;
-  color: #121619;
+  background: var(--background-inverse);
+  color: var(--text-inverse);
   border: none;
   white-space: nowrap;
   font-family: var(--font-ui);
   font-size: 12px;
   line-height: 14px;
-  padding: 4px 8px;
-  border-radius: 0px;
+  padding: 5px 8px;
+  border-radius: 4px;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.1s ease, transform 0.1s ease;
@@ -343,30 +342,26 @@ main {
   list-style: none;
   margin: 0;
   padding: 0;
-  overflow: hidden;
+  border: 1px solid var(--border-soft);
 }
 
 .queue-item {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-areas:
-    "info action";
-  column-gap: 16px;
-  row-gap: 10px;
-  padding: 16px;
-  background: var(--layer-01);
-  border-bottom: 1px solid var(--border-soft);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   height: 64px;
+  padding: 0 16px;
+  margin: 8px 8px 0 16px;
+  background: var(--layer-01);
+  border-bottom: 1px solid var(--border-strong-01);
 }
 
-.queue-item:last-child { border-bottom: none; }
-
-.queue-progress-list{
-    display:flex;
-    flex-direction:column;
+.item-info {
+  flex: 1;
+  min-width: 0;
+  margin-top: 7px;
 }
-
-.item-info { grid-area: info; min-width: 0; }
 
 .item-name {
   font-size: 14px;
@@ -384,34 +379,38 @@ main {
   line-height: 18px;
   color: var(--text-secondary);
   display: flex;
+  align-items: center;
   margin: 0;
 }
 
 .item-meta .arrow-result { color: var(--accent); }
 .item-meta .error-text { color: var(--error); }
 
-.item-format select,
-.item-quality select {
+.item-format select {
   font-family: var(--font-ui);
   font-size: 14px;
   line-height: 18px;
-  background: none;
   color: var(--text-primary);
-  border: none;
+  height: 32px;
   padding: 0 16px;
+  border: none;
+  background: transparent;
   appearance: none;
   cursor: pointer;
-  height: 32px;
 }
 
-.item-format select:focus, .item-quality select:focus { outline: 1px solid var(--accent-dim); }
+.item-format select:focus { outline: 1px solid var(--accent-dim); }
 
 .item-progress {
-  width: 100%;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
   height: 4px;
   background: var(--border);
   overflow: hidden;
 }
+.item-progress[hidden] { display: none; }
 
 .item-progress-bar {
   height: 100%;
@@ -420,17 +419,14 @@ main {
   transition: width 0.15s ease;
 }
 
-.item-action { grid-area: action; display: flex; align-items: flex-start; gap: 0; justify-self: end; }
+.item-action { display: flex; align-items: flex-start; gap: 0; flex-shrink: 0; }
 
-@media (max-width: 620px) {
-  .queue-item {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      "info"
-      "action";
-    align-items: flex-start;
+@media (max-width: 900px) {
+  main { flex-direction: column; }
+  .workspace {
+    border-left: none;
+    border-top: 1px solid var(--border-subtle-00);
   }
-  .item-action { justify-self: start; }
 }
 
 /* ---------------------------------------------------------
