@@ -88,7 +88,7 @@ code {
   height: 48px;
   display: flex;
   align-items: center;
-  padding: 0 clamp(20px, 5vw, 56px);
+  padding: 0 32px;
   border-bottom: 1px solid var(--border-soft);
 }
 
@@ -106,39 +106,61 @@ code {
 main {
   position: relative;
   z-index: 1;
+  display: flex;
+  align-items: flex-start;
   flex: 1;
   width: 100%;
-  max-width: 760px;
   margin: 0 auto;
-  padding: clamp(40px, 8vh, 88px) 20px 60px;
+}
+
+@media (max-width: 800px){
+
+    main{
+        flex-direction:column;
+    }
+
+    .workspace{
+        width:100%;
+        flex:auto;
+    }
+}
+
+.intro{
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    flex: 1;
 }
 
 .intro h1 {
   font-size: 32px;
   line-height: 40px;
   letter-spacing: -0.02em;
-  margin: 0 0 12px;
-  font-weight: 600;
+  font-weight: 400;
+  margin: 0px;
 }
 
 .intro h2 {
   font-size: 20px;
   line-height: 28px;
   font-weight: 400;
-  color: var(--text-secondary);
-  max-width: 52ch;
-  margin: 0 0 16px;
+  color: var(--text-primary);
+  margin: 0px;
 }
 
 .intro p {
-  color: var(--text-faint);
-  font-size: 13px;
-  line-height: 1.6;
-  max-width: 52ch;
-  margin: 0 0 32px;
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 18px;
+  margin: 0px;
 }
 
 .intro p a { color: var(--accent); }
+
+.workspace{
+    display: flex;
+    flex-direction: column;
+}
 
 /* ---------------------------------------------------------
    Dropzone
@@ -157,9 +179,9 @@ main {
   background-size: 10px 1px, 10px 1px, 1px 10px, 1px 10px;
   background-position: 0 0, 0 100%, 0 0, 100% 0;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
+  align-items: flex-start;
+  justify-content: flex-start;
+  text-align: left;
   cursor: pointer;
   transition: background-color 0.15s ease;
 }
@@ -183,22 +205,12 @@ main {
 /* ---------------------------------------------------------
    Queue
 --------------------------------------------------------- */
-.queue-section { margin-top: 40px; }
-
 .queue-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
-}
-
-.queue-head h2 {
-  font-size: 13px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
-  margin: 0;
+  margin-bottom: 0px;
+  height: 48px;
+  padding: 10px 0;
 }
 
 /* ---------------------------------------------------------
@@ -231,15 +243,15 @@ main {
   bottom: calc(100% + 6px);
   left: 50%;
   transform: translateX(-50%) translateY(4px);
-  background: var(--surface-alt);
-  color: var(--text);
-  border: 1px solid var(--border);
+  background: #ffffff;
+  color: #121619;
+  border: none;
   white-space: nowrap;
   font-family: var(--font-ui);
   font-size: 12px;
-  line-height: 1;
-  padding: 5px 8px;
-  border-radius: 4px;
+  line-height: 14px;
+  padding: 4px 8px;
+  border-radius: 0px;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.1s ease, transform 0.1s ease;
@@ -280,7 +292,6 @@ main {
   display: flex;
   width: 100%;
   height: 64px;
-  margin-top: 20px;
 }
 
 .btn-layer {
@@ -328,25 +339,28 @@ main {
   list-style: none;
   margin: 0;
   padding: 0;
-  border: 1px solid var(--border-soft);
-  border-radius: var(--radius);
   overflow: hidden;
 }
 
 .queue-item {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto;
   grid-template-areas:
-    "info format action"
-    "progress progress progress";
+    "info action";
   column-gap: 16px;
   row-gap: 10px;
-  padding: 14px 16px;
-  background: var(--surface);
+  padding: 16px;
+  background: var(--layer-01);
   border-bottom: 1px solid var(--border-soft);
+  height: 64px;
 }
 
 .queue-item:last-child { border-bottom: none; }
+
+.queue-progress-list{
+    display:flex;
+    flex-direction:column;
+}
 
 .item-info { grid-area: info; min-width: 0; }
 
@@ -357,44 +371,40 @@ main {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin: 0 0 3px;
+  margin: 0;
 }
 
 .item-meta {
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 14px;
   line-height: 18px;
   color: var(--text-secondary);
   display: flex;
-  align-items: center;
-  gap: 6px;
+  margin: 0;
 }
 
 .item-meta .arrow-result { color: var(--accent); }
 .item-meta .error-text { color: var(--error); }
 
-.item-format { grid-area: format; }
-
 .item-format select,
 .item-quality select {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  background: var(--surface-alt);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 6px 8px;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 18px;
+  background: none;
+  color: var(--text-primary);
+  border: none;
+  padding: 0 16px;
   appearance: none;
   cursor: pointer;
+  height: 32px;
 }
 
 .item-format select:focus, .item-quality select:focus { outline: 1px solid var(--accent-dim); }
 
 .item-progress {
-  grid-area: progress;
   width: 100%;
-  height: 3px;
-  border-radius: 2px;
+  height: 4px;
   background: var(--border);
   overflow: hidden;
 }
@@ -406,33 +416,17 @@ main {
   transition: width 0.15s ease;
 }
 
-.item-action { grid-area: action; display: flex; align-items: center; gap: 0; justify-self: end; }
+.item-action { grid-area: action; display: flex; align-items: flex-start; gap: 0; justify-self: end; }
 
 @media (max-width: 620px) {
   .queue-item {
     grid-template-columns: 1fr;
     grid-template-areas:
       "info"
-      "format"
-      "action"
-      "progress";
+      "action";
     align-items: flex-start;
   }
   .item-action { justify-self: start; }
-}
-
-/* ---------------------------------------------------------
-   Support note
---------------------------------------------------------- */
-.support-note {
-  margin-top: 32px;
-  padding: 14px 16px;
-  border: 1px solid rgba(245, 166, 35, 0.3);
-  background: rgba(245, 166, 35, 0.06);
-  border-radius: var(--radius);
-  color: #e8c48a;
-  font-size: 13.5px;
-  line-height: 1.5;
 }
 
 /* ---------------------------------------------------------
