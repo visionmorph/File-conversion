@@ -46,9 +46,16 @@ const dropzone = document.getElementById("dropzone");
 const fileInput = document.getElementById("file-input");
 const queueSection = document.getElementById("queue-section");
 const queueList = document.getElementById("queue-list");
-const convertAllBtn = document.getElementById("convert-all");
-const clearAllBtn = document.getElementById("clear-all");
+const removeAllBtn = document.getElementById("remove-all-btn");
+const convertFilesBtn = document.getElementById("convert-files-btn");
+const convertFilesLabel = convertFilesBtn.querySelector(".btn-label");
 const supportNote = document.getElementById("support-note");
+
+// Drives the two 64px layer buttons beneath the queue. Separate from
+// each item's own status so "all converted" can flip the group into
+// its "Download all" state as a unit.
+// idle -> converting -> done (-> idle again once new files are added)
+let queuePhase = "idle";
 
 const videoSupported = typeof window.VideoEncoder !== "undefined" && typeof window.VideoDecoder !== "undefined";
 if (!videoSupported) supportNote.hidden = false;
@@ -93,6 +100,7 @@ function addFiles(fileList) {
       errorMessage: "",
     });
   }
+  queuePhase = "idle";
   render();
 }
 
@@ -128,6 +136,18 @@ dropzone.addEventListener("drop", (e) => {
 // Rendering
 // ---------------------------------------------------------------
 
+// Small inline icon set for the button components (16x16, currentColor).
+const ICONS = {
+  x: `<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+  download: `<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 2V10M8 10L5 7M8 10L11 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 12.5V13.5C3 13.7761 3.22386 14 3.5 14H12.5C12.7761 14 13 13.7761 13 13.5V12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+};
+
+function icon(name) {
+  const template = document.createElement("template");
+  template.innerHTML = ICONS[name].trim();
+  return template.content.firstElementChild;
+}
+
 function formatBytes(bytes) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -140,6 +160,29 @@ function render() {
 
   for (const item of items.values()) {
     queueList.appendChild(renderItem(item));
+  }
+
+  updateActionBar();
+}
+
+function updateActionBar() {
+  const total = items.size;
+
+  if (queuePhase === "converting") {
+    removeAllBtn.disabled = true;
+    convertFilesBtn.disabled = true;
+    convertFilesBtn.dataset.mode = "converting";
+    convertFilesLabel.textContent = "Converting files...";
+  } else if (queuePhase === "done") {
+    removeAllBtn.disabled = false;
+    convertFilesBtn.disabled = false;
+    convertFilesBtn.dataset.mode = "download";
+    convertFilesLabel.textContent = "Download all";
+  } else {
+    removeAllBtn.disabled = false;
+    convertFilesBtn.disabled = false;
+    convertFilesBtn.dataset.mode = "convert";
+    convertFilesLabel.textContent = `Convert ${total} file${total === 1 ? "" : "s"}`;
   }
 }
 
@@ -205,15 +248,17 @@ function renderItem(item) {
 
   if (item.status === "done") {
     const a = document.createElement("a");
-    a.className = "item-download";
+    a.className = "btn-ghost-text";
     a.href = item.resultUrl;
     const outName = swapExt(item.file.name, item.targetFormat);
     a.download = outName;
-    a.textContent = "Download";
+    a.appendChild(document.createTextNode("Download"));
+    a.appendChild(icon("download"));
     action.appendChild(a);
   } else {
     const btn = document.createElement("button");
-    btn.className = "btn btn-primary";
+    btn.type = "button";
+    btn.className = "btn-ghost-text";
     btn.textContent = item.status === "converting" ? "Converting…" : item.status === "error" ? "Retry" : "Convert";
     btn.disabled = item.status === "converting";
     btn.addEventListener("click", () => convertItem(item.id));
@@ -221,9 +266,11 @@ function renderItem(item) {
   }
 
   const remove = document.createElement("button");
-  remove.className = "remove-btn";
+  remove.type = "button";
+  remove.className = "btn-icon";
+  remove.dataset.tooltip = "Remove";
   remove.setAttribute("aria-label", "Remove from queue");
-  remove.textContent = "✕";
+  remove.appendChild(icon("x"));
   remove.addEventListener("click", () => {
     if (item.resultUrl) URL.revokeObjectURL(item.resultUrl);
     items.delete(item.id);
@@ -366,20 +413,44 @@ async function convertVideo(item, onProgress) {
 }
 
 // ---------------------------------------------------------------
-// Bulk actions
+// Action bar (the two 64px layer buttons)
 // ---------------------------------------------------------------
 
-convertAllBtn.addEventListener("click", async () => {
-  const pending = [...items.values()].filter((i) => i.status === "pending" || i.status === "error");
-  for (const item of pending) {
-    await convertItem(item.id);
-  }
-});
-
-clearAllBtn.addEventListener("click", () => {
+removeAllBtn.addEventListener("click", () => {
+  if (removeAllBtn.disabled) return;
   for (const item of items.values()) {
     if (item.resultUrl) URL.revokeObjectURL(item.resultUrl);
   }
   items.clear();
+  queuePhase = "idle";
   render();
 });
+
+convertFilesBtn.addEventListener("click", async () => {
+  if (convertFilesBtn.disabled) return;
+
+  if (convertFilesBtn.dataset.mode === "download") {
+    downloadAllAsZip();
+    return;
+  }
+
+  queuePhase = "converting";
+  render();
+
+  const pending = [...items.values()].filter((i) => i.status === "pending" || i.status === "error");
+  for (const item of pending) {
+    await convertItem(item.id);
+  }
+
+  queuePhase = "done";
+  render();
+});
+
+function downloadAllAsZip() {
+  // Intentionally not wired up yet — zip functionality is on hold.
+  // When ready: lazy-load fflate the same way mediabunny is loaded
+  // above, build { filename: Uint8Array } from each item's
+  // resultBlob, and zip with fflate's async zip() (not zipSync())
+  // so large batches don't freeze the tab.
+  console.log("Download all as .zip — not implemented yet.");
+}
