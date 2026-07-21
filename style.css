@@ -423,6 +423,8 @@ h1 {
 .item-format select:hover:not(:disabled) { background-color: var(--background-hover); }
 .item-format select:disabled {
   color: var(--text-primary);
+  -webkit-text-fill-color: var(--text-primary);
+  opacity: 1;
   cursor: not-allowed;
 }
 .item-format select:focus { outline: 1px solid #ffffff; }
