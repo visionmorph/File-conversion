@@ -384,7 +384,6 @@ h1 {
   display: flex;
   align-items: center;
 }
-.item-format[hidden] { display: none; }
 
 .item-format label {
   font-family: var(--font-ui);
