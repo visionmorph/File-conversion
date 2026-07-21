@@ -251,7 +251,8 @@ function renderItem(item) {
   const meta = document.createElement("p");
   meta.className = "item-meta";
   if (item.status === "done") {
-    meta.innerHTML = `${formatBytes(item.file.size)} <span class="arrow-result">→ ${formatBytes(item.resultBlob.size)}</span>`;
+    const grew = item.resultBlob.size > item.file.size;
+    meta.innerHTML = `${formatBytes(item.file.size)} <span class="arrow-result${grew ? " is-larger" : ""}">→ ${formatBytes(item.resultBlob.size)}</span>`;
   } else if (item.status === "error") {
     meta.innerHTML = `${formatBytes(item.file.size)} <span class="error-text">${escapeHtml(item.errorMessage)}</span>`;
   } else {
@@ -306,16 +307,23 @@ function renderItem(item) {
     a.appendChild(document.createTextNode("Download"));
     a.appendChild(icon("download"));
     action.appendChild(a);
+  } else if (item.status === "converting") {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn-ghost-text";
+    btn.disabled = true;
+    btn.appendChild(document.createTextNode("Download"));
+    btn.appendChild(icon("download"));
+    action.appendChild(btn);
   } else {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "btn-ghost-text";
-    btn.textContent = item.status === "converting" ? "Converting…" : item.status === "error" ? "Retry" : "Convert";
-    btn.disabled = item.status === "converting";
+    btn.textContent = item.status === "error" ? "Retry" : "Convert";
     // Hide this row's own Convert/Retry button while a bulk "Convert
     // N files" run is in progress and this item hasn't started yet —
-    // only the actively-converting row's "Converting…" label shows.
-    btn.hidden = queuePhase === "converting" && item.status !== "converting";
+    // only the actively-converting row's (disabled) Download shows.
+    btn.hidden = queuePhase === "converting";
     btn.addEventListener("click", () => enqueueConvert(item.id));
     action.appendChild(btn);
   }
