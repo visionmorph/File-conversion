@@ -138,6 +138,7 @@ dropzone.addEventListener("drop", (e) => {
 const ICONS = {
   x: `<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
   download: `<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 2V10M8 10L5 7M8 10L11 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 12.5V13.5C3 13.7761 3.22386 14 3.5 14H12.5C12.7761 14 13 13.7761 13 13.5V12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+  "chevron-down": `<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
 };
 
 function icon(name) {
@@ -217,8 +218,19 @@ function renderItem(item) {
 
   const formatWrap = document.createElement("div");
   formatWrap.className = "item-format";
+  // Hidden once this item starts converting, once it's done, or the
+  // moment "Convert N files" fires (so waiting-their-turn rows hide
+  // immediately too) — and it stays hidden after conversion completes.
+  formatWrap.hidden = item.status === "converting" || item.status === "done" || queuePhase === "converting";
+
+  const label = document.createElement("label");
+  label.textContent = "Output:";
+  formatWrap.appendChild(label);
+
+  const selectWrap = document.createElement("div");
+  selectWrap.className = "select-wrap";
+
   const select = document.createElement("select");
-  select.disabled = item.status === "converting";
   const choices = item.kind === "image" ? ["jpg", "png", "webp"] : ["mp4", "webm"];
   const sourceNorm = item.ext === "jpeg" ? "jpg" : item.ext;
   for (const choice of choices) {
@@ -232,7 +244,10 @@ function renderItem(item) {
   select.addEventListener("change", () => {
     item.targetFormat = select.value;
   });
-  formatWrap.appendChild(select);
+  selectWrap.appendChild(select);
+  selectWrap.appendChild(icon("chevron-down"));
+  selectWrap.lastChild.classList.add("select-chevron");
+  formatWrap.appendChild(selectWrap);
   action.appendChild(formatWrap);
 
   if (item.status === "done") {
