@@ -372,6 +372,7 @@ h1 {
   align-items: center;
   gap: 8px;
 }
+.item-format[hidden] { display: none; }
 
 .item-format label {
   font-family: var(--font-ui);
