@@ -235,6 +235,11 @@ h1 {
 }
 .btn-icon:hover { background-color: var(--background-hover); }
 .btn-icon svg { width: 16px; height: 16px; display: block; }
+.btn-icon:disabled {
+  color: var(--icon-on-color-disabled);
+  cursor: not-allowed;
+}
+.btn-icon:disabled:hover { background-color: transparent; }
 
 .btn-icon[data-tooltip]::after {
   content: attr(data-tooltip);
