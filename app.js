@@ -202,6 +202,7 @@ const ICONS = {
   x: `<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
   download: `<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 2V10M8 10L5 7M8 10L11 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 12.5V13.5C3 13.7761 3.22386 14 3.5 14H12.5C12.7761 14 13 13.7761 13 13.5V12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
   "chevron-down": `<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  check: `<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 8L6.5 11.5L13 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
 };
 
 function icon(name) {
@@ -216,7 +217,178 @@ function formatBytes(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+// ---------------------------------------------------------------
+// Custom "Output:" format dropdown (replaces the native <select>)
+// ---------------------------------------------------------------
+// Only one instance is ever open at a time. State + the outside-click
+// and Escape handling live here at module scope (registered once)
+// rather than per-dropdown, so rebuilding the list on every render()
+// can never leave a stray document-level listener behind.
+let openDropdown = null; // { wrap, close } | null
+
+function closeOpenDropdown() {
+  if (openDropdown) {
+    openDropdown.close();
+    openDropdown = null;
+  }
+}
+
+document.addEventListener(
+  "click",
+  (e) => {
+    if (openDropdown && !openDropdown.wrap.contains(e.target)) closeOpenDropdown();
+  },
+  true
+);
+
+document.addEventListener("keydown", (e) => {
+  if (openDropdown && e.key === "Escape") {
+    e.preventDefault();
+    openDropdown.wrap.querySelector(".select-trigger")?.focus();
+    closeOpenDropdown();
+  }
+});
+
+/**
+ * Builds an accessible listbox-button dropdown for an item's output
+ * format. Mirrors the ARIA "select-only combobox" pattern: a button
+ * holds focus and drives everything via aria-activedescendant, so
+ * screen readers, arrow keys, and typeahead all behave like a real
+ * select, but the popup list is ordinary styleable HTML.
+ */
+function createFormatDropdown(item, isReadOnly) {
+  const wrap = document.createElement("div");
+  wrap.className = "select-wrap";
+
+  const uid = `format-${item.id}`;
+  const choices = item.kind === "image" ? ["jpg", "png", "webp"] : ["mp4", "webm", "mp3"];
+  const sourceNorm = item.ext === "jpeg" ? "jpg" : item.ext;
+  const available = choices.filter((c) => c !== sourceNorm);
+  let activeIndex = Math.max(0, available.indexOf(item.targetFormat));
+
+  const trigger = document.createElement("button");
+  trigger.type = "button";
+  trigger.className = "select-trigger";
+  trigger.id = `${uid}-trigger`;
+  trigger.setAttribute("aria-haspopup", "listbox");
+  trigger.setAttribute("aria-expanded", "false");
+  trigger.setAttribute("aria-controls", `${uid}-list`);
+  if (isReadOnly) trigger.setAttribute("aria-disabled", "true");
+
+  const triggerLabel = document.createElement("span");
+  triggerLabel.textContent = `.${item.targetFormat}`;
+  trigger.appendChild(triggerLabel);
+  trigger.appendChild(icon("chevron-down"));
+  trigger.lastChild.classList.add("select-chevron");
+
+  const list = document.createElement("ul");
+  list.className = "select-list";
+  list.id = `${uid}-list`;
+  list.setAttribute("role", "listbox");
+  list.setAttribute("aria-labelledby", trigger.id);
+  list.hidden = true;
+
+  const optionEls = available.map((choice, idx) => {
+    const li = document.createElement("li");
+    li.className = "select-option";
+    li.id = `${uid}-opt-${idx}`;
+    li.setAttribute("role", "option");
+    li.setAttribute("aria-selected", String(choice === item.targetFormat));
+    li.dataset.value = choice;
+
+    const label = document.createElement("span");
+    label.textContent = `.${choice}`;
+    li.appendChild(label);
+    li.appendChild(icon("check"));
+    li.lastChild.classList.add("option-check");
+
+    li.addEventListener("click", () => {
+      selectOption(idx);
+      closeOpenDropdown();
+      trigger.focus();
+    });
+    list.appendChild(li);
+    return li;
+  });
+
+  function selectOption(idx) {
+    activeIndex = idx;
+    const choice = available[idx];
+    item.targetFormat = choice;
+    triggerLabel.textContent = `.${choice}`;
+    optionEls.forEach((el, i) => el.setAttribute("aria-selected", String(i === idx)));
+  }
+
+  function highlightActive() {
+    trigger.setAttribute("aria-activedescendant", optionEls[activeIndex]?.id || "");
+    optionEls.forEach((el, i) => el.classList.toggle("is-active", i === activeIndex));
+  }
+
+  function open() {
+    if (isReadOnly || !available.length) return;
+    closeOpenDropdown();
+    list.hidden = false;
+    trigger.setAttribute("aria-expanded", "true");
+    highlightActive();
+    openDropdown = { wrap, close };
+  }
+
+  function close() {
+    list.hidden = true;
+    trigger.setAttribute("aria-expanded", "false");
+    trigger.removeAttribute("aria-activedescendant");
+  }
+
+  trigger.addEventListener("click", () => {
+    if (isReadOnly) return;
+    if (list.hidden) open();
+    else closeOpenDropdown();
+  });
+
+  trigger.addEventListener("keydown", (e) => {
+    if (isReadOnly) return;
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        if (list.hidden) open();
+        else {
+          activeIndex = Math.min(activeIndex + 1, available.length - 1);
+          highlightActive();
+        }
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        if (list.hidden) open();
+        else {
+          activeIndex = Math.max(activeIndex - 1, 0);
+          highlightActive();
+        }
+        break;
+      case "Enter":
+      case " ":
+        e.preventDefault();
+        if (list.hidden) open();
+        else {
+          selectOption(activeIndex);
+          closeOpenDropdown();
+        }
+        break;
+      case "Escape":
+        if (!list.hidden) {
+          e.preventDefault();
+          closeOpenDropdown();
+        }
+        break;
+    }
+  });
+
+  wrap.appendChild(trigger);
+  wrap.appendChild(list);
+  return wrap;
+}
+
 function render() {
+  closeOpenDropdown();
   queueSection.hidden = items.size === 0;
   queueList.innerHTML = "";
 
@@ -289,30 +461,8 @@ function renderItem(item) {
   label.textContent = "Output:";
   formatWrap.appendChild(label);
 
-  const selectWrap = document.createElement("div");
-  selectWrap.className = "select-wrap";
-
-  const select = document.createElement("select");
-  // Stays visible always — just disabled while this item is actively
-  // converting, waiting its turn in a queue run, or already done.
-  select.disabled = item.status === "done" || queuePhase === "converting";
-  const choices = item.kind === "image" ? ["jpg", "png", "webp"] : ["mp4", "webm", "mp3"];
-  const sourceNorm = item.ext === "jpeg" ? "jpg" : item.ext;
-  for (const choice of choices) {
-    if (choice === sourceNorm) continue;
-    const opt = document.createElement("option");
-    opt.value = choice;
-    opt.textContent = `.${choice}`;
-    opt.selected = choice === item.targetFormat;
-    select.appendChild(opt);
-  }
-  select.addEventListener("change", () => {
-    item.targetFormat = select.value;
-  });
-  selectWrap.appendChild(select);
-  selectWrap.appendChild(icon("chevron-down"));
-  selectWrap.lastChild.classList.add("select-chevron");
-  formatWrap.appendChild(selectWrap);
+  const isReadOnly = item.status === "done" || queuePhase === "converting";
+  formatWrap.appendChild(createFormatDropdown(item, isReadOnly));
   action.appendChild(formatWrap);
 
   if (item.status === "done") {
