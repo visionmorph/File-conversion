@@ -225,7 +225,7 @@ function renderItem(item) {
     if (choice === sourceNorm) continue;
     const opt = document.createElement("option");
     opt.value = choice;
-    opt.textContent = `→ .${choice}`;
+    opt.textContent = `.${choice}`;
     opt.selected = choice === item.targetFormat;
     select.appendChild(opt);
   }
