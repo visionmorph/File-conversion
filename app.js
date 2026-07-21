@@ -265,6 +265,10 @@ function renderItem(item) {
     btn.className = "btn-ghost-text";
     btn.textContent = item.status === "converting" ? "Converting…" : item.status === "error" ? "Retry" : "Convert";
     btn.disabled = item.status === "converting";
+    // Hide this row's own Convert/Retry button while a bulk "Convert
+    // N files" run is in progress and this item hasn't started yet —
+    // only the actively-converting row's "Converting…" label shows.
+    btn.hidden = queuePhase === "converting" && item.status !== "converting";
     btn.addEventListener("click", () => convertItem(item.id));
     action.appendChild(btn);
   }
