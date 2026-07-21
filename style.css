@@ -23,6 +23,7 @@
 
   --warn: #f5a623;
   --error: #f2705f;
+  --support-success: #42be65;
 
   /* Button-component tokens (Carbon-style naming, per component spec) */
   --background-hover: rgba(141, 141, 141, 0.16); /* #8D8D8D @ 16% */
@@ -139,7 +140,8 @@ h1 {
   margin: 0;
 }
 
-.intro p a { color: var(--accent); }
+.link-primary { color: var(--link-primary); }
+.link-primary:hover { color: var(--link-primary-hover); }
 
 .workspace {
   flex: 1;
@@ -281,6 +283,7 @@ h1 {
 }
 .btn-ghost-text:hover:not(:disabled) { background-color: var(--background-hover); }
 .btn-ghost-text:disabled { color: var(--text-disabled); cursor: not-allowed; }
+.btn-ghost-text[hidden] { display: none; }
 .btn-ghost-text svg { width: 16px; height: 16px; flex-shrink: 0; }
 
 /* 3. Layer button, 64px height, fills width */
@@ -374,7 +377,7 @@ h1 {
   margin: 0;
 }
 
-.item-meta .arrow-result { color: var(--accent); }
+.item-meta .arrow-result { color: var(--support-success); }
 .item-meta .error-text { color: var(--error); }
 
 .item-format {
