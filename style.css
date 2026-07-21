@@ -18,6 +18,9 @@
   --accent-dim: #2d9d8c;
   --accent-wash: rgba(94, 234, 212, 0.08);
 
+  --link-primary: #78a9ff;
+  --link-primary-hover: #a6c8ff;
+
   --warn: #f5a623;
   --error: #f2705f;
 
@@ -175,15 +178,22 @@ h1 {
 .dropzone:hover,
 .dropzone:focus-visible,
 .dropzone.drag-over {
-  --dash-color: var(--accent);
-  background-color: var(--accent-wash);
+  --dash-color: var(--border-inverse);
+  background-color: var(--background-hover);
   outline: none;
+}
+
+.dropzone:hover .drop-primary,
+.dropzone:focus-visible .drop-primary,
+.dropzone.drag-over .drop-primary {
+  color: var(--link-primary-hover);
 }
 
 .drop-primary {
   margin: 0;
-  font-size: 15px;
-  color: var(--accent);
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--link-primary);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
@@ -370,7 +380,6 @@ h1 {
 .item-format {
   display: flex;
   align-items: center;
-  gap: 8px;
 }
 .item-format[hidden] { display: none; }
 
