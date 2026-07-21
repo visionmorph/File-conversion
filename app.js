@@ -20,7 +20,7 @@ const IMAGE_EXTS = ["jpg", "jpeg", "png", "webp"];
 const VIDEO_EXTS = ["mp4", "webm", "mov", "mkv"];
 
 const IMAGE_MIME = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp" };
-const VIDEO_MIME = { mp4: "video/mp4", webm: "video/webm" };
+const VIDEO_MIME = { mp4: "video/mp4", webm: "video/webm", mp3: "audio/mpeg" };
 
 // Populated lazily on first video conversion so the page loads
 // instantly even if the CDN is briefly slow.
@@ -48,6 +48,23 @@ function loadFflate() {
     });
   }
   return fflateLoadPromise;
+}
+
+// MP3 encoding isn't natively supported by WebCodecs in most browsers,
+// so this WASM (LAME) encoder is loaded only when someone actually
+// converts to .mp3 and the browser can't do it natively.
+const MP3_ENCODER_CDN_URL = "https://esm.sh/@mediabunny/mp3-encoder";
+let mp3Encoder = null;
+let mp3EncoderLoadPromise = null;
+
+function loadMp3Encoder() {
+  if (!mp3EncoderLoadPromise) {
+    mp3EncoderLoadPromise = import(MP3_ENCODER_CDN_URL).then((mod) => {
+      mp3Encoder = mod;
+      return mod;
+    });
+  }
+  return mp3EncoderLoadPromise;
 }
 
 // ---------------------------------------------------------------
@@ -279,7 +296,7 @@ function renderItem(item) {
   // Stays visible always — just disabled while this item is actively
   // converting, waiting its turn in a queue run, or already done.
   select.disabled = item.status === "done" || queuePhase === "converting";
-  const choices = item.kind === "image" ? ["jpg", "png", "webp"] : ["mp4", "webm"];
+  const choices = item.kind === "image" ? ["jpg", "png", "webp"] : ["mp4", "webm", "mp3"];
   const sourceNorm = item.ext === "jpeg" ? "jpg" : item.ext;
   for (const choice of choices) {
     if (choice === sourceNorm) continue;
@@ -439,6 +456,8 @@ async function convertVideo(item, onProgress) {
     BufferTarget,
     Mp4OutputFormat,
     WebMOutputFormat,
+    Mp3OutputFormat,
+    canEncodeAudio,
   } = mb;
 
   const input = new Input({
@@ -446,13 +465,33 @@ async function convertVideo(item, onProgress) {
     formats: ALL_FORMATS,
   });
 
-  const outputFormat = item.targetFormat === "mp4" ? new Mp4OutputFormat() : new WebMOutputFormat();
+  const isAudioOnly = item.targetFormat === "mp3";
+
+  let outputFormat;
+  if (item.targetFormat === "mp4") outputFormat = new Mp4OutputFormat();
+  else if (item.targetFormat === "webm") outputFormat = new WebMOutputFormat();
+  else outputFormat = new Mp3OutputFormat();
+
   const output = new Output({
     format: outputFormat,
     target: new BufferTarget(),
   });
 
-  const conversion = await Conversion.init({ input, output });
+  const conversionOptions = { input, output };
+
+  if (isAudioOnly) {
+    // .mp3 is audio-only — drop the video track entirely.
+    conversionOptions.video = { discard: true };
+
+    // Most browsers can't encode MP3 natively via WebCodecs. Only pull
+    // in the ~130kB WASM (LAME) encoder if native support is missing.
+    if (!(await canEncodeAudio("mp3"))) {
+      const { registerMp3Encoder } = mp3Encoder || (await loadMp3Encoder());
+      registerMp3Encoder();
+    }
+  }
+
+  const conversion = await Conversion.init(conversionOptions);
 
   if (!conversion.isValid) {
     const reasons = conversion.discardedTracks?.map((t) => t.reason).join(", ");
