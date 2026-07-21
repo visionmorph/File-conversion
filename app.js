@@ -300,31 +300,22 @@ function renderItem(item) {
 
   if (item.status === "done") {
     const a = document.createElement("a");
-    a.className = "btn-ghost-text";
+    a.className = "btn-icon";
     a.href = item.resultUrl;
     const outName = swapExt(item.file.name, item.targetFormat);
     a.download = outName;
-    a.appendChild(document.createTextNode("Download"));
+    a.dataset.tooltip = "Download";
+    a.setAttribute("aria-label", "Download");
     a.appendChild(icon("download"));
     action.appendChild(a);
   } else if (item.status === "converting") {
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "btn-ghost-text";
+    btn.className = "btn-icon";
     btn.disabled = true;
-    btn.appendChild(document.createTextNode("Download"));
+    btn.dataset.tooltip = "Download";
+    btn.setAttribute("aria-label", "Download");
     btn.appendChild(icon("download"));
-    action.appendChild(btn);
-  } else {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "btn-ghost-text";
-    btn.textContent = item.status === "error" ? "Retry" : "Convert";
-    // Hide this row's own Convert/Retry button while a bulk "Convert
-    // N files" run is in progress and this item hasn't started yet —
-    // only the actively-converting row's (disabled) Download shows.
-    btn.hidden = queuePhase === "converting";
-    btn.addEventListener("click", () => enqueueConvert(item.id));
     action.appendChild(btn);
   }
 
