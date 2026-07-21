@@ -308,15 +308,6 @@ function renderItem(item) {
     a.setAttribute("aria-label", "Download");
     a.appendChild(icon("download"));
     action.appendChild(a);
-  } else if (item.status === "converting") {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "btn-icon";
-    btn.disabled = true;
-    btn.dataset.tooltip = "Download";
-    btn.setAttribute("aria-label", "Download");
-    btn.appendChild(icon("download"));
-    action.appendChild(btn);
   }
 
   const remove = document.createElement("button");
