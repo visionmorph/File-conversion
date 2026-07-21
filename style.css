@@ -407,7 +407,13 @@ h1 {
   align-items: center;
 }
 
-.item-format select {
+.select-wrap {
+  position: relative;
+}
+
+.select-trigger {
+  display: inline-flex;
+  align-items: center;
   font-family: var(--font-ui);
   font-size: 14px;
   line-height: 18px;
@@ -416,18 +422,17 @@ h1 {
   padding: 0 40px 0 16px;
   border: none;
   background: transparent;
-  appearance: none;
   cursor: pointer;
 }
 
-.item-format select:hover:not(:disabled) { background-color: var(--background-hover); }
-.item-format select:disabled {
+.select-trigger:hover { background-color: var(--background-hover); }
+.select-trigger:focus-visible { outline: 1px solid #ffffff; }
+
+.select-trigger[aria-disabled="true"] {
   color: var(--text-primary);
-  -webkit-text-fill-color: var(--text-primary);
-  opacity: 1;
   cursor: not-allowed;
 }
-.item-format select:focus { outline: 1px solid #ffffff; }
+.select-trigger[aria-disabled="true"]:hover { background-color: transparent; }
 
 .item-format .select-chevron {
   position: absolute;
@@ -440,8 +445,54 @@ h1 {
   pointer-events: none;
 }
 
-.item-format select:disabled + .select-chevron {
+.select-trigger[aria-disabled="true"] .select-chevron {
   color: var(--icon-on-color-disabled);
+}
+
+.select-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 20;
+  min-width: 100%;
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  background: var(--surface);
+  border: 1px solid var(--border-strong-01);
+}
+.select-list[hidden] { display: none; }
+
+.select-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: 32px;
+  padding: 0 16px;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.select-option:hover,
+.select-option.is-active {
+  background-color: var(--background-hover);
+}
+
+.select-option .option-check {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--text-on-color);
+  visibility: hidden;
+}
+
+.select-option[aria-selected="true"] .option-check {
+  visibility: visible;
 }
 
 .item-progress {
