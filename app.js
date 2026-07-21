@@ -17,7 +17,7 @@ const MEDIABUNNY_CDN_URL = "https://esm.sh/mediabunny";
 const FFLATE_CDN_URL = "https://esm.sh/fflate";
 
 const IMAGE_EXTS = ["jpg", "jpeg", "png", "webp"];
-const VIDEO_EXTS = ["mp4", "webm"];
+const VIDEO_EXTS = ["mp4", "webm", "mov", "mkv"];
 
 const IMAGE_MIME = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp" };
 const VIDEO_MIME = { mp4: "video/mp4", webm: "video/webm" };
