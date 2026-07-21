@@ -13,6 +13,9 @@
 // the latest release.
 const MEDIABUNNY_CDN_URL = "https://esm.sh/mediabunny";
 
+// Used for the "Download all (.zip)" button.
+const FFLATE_CDN_URL = "https://esm.sh/fflate";
+
 const IMAGE_EXTS = ["jpg", "jpeg", "png", "webp"];
 const VIDEO_EXTS = ["mp4", "webm"];
 
@@ -32,6 +35,19 @@ function loadMediabunny() {
     });
   }
   return mediabunnyLoadPromise;
+}
+
+let fflate = null;
+let fflateLoadPromise = null;
+
+function loadFflate() {
+  if (!fflateLoadPromise) {
+    fflateLoadPromise = import(FFLATE_CDN_URL).then((mod) => {
+      fflate = mod;
+      return mod;
+    });
+  }
+  return fflateLoadPromise;
 }
 
 // ---------------------------------------------------------------
@@ -55,8 +71,38 @@ const convertFilesLabel = convertFilesBtn.querySelector(".btn-label");
 // its "Download all" state as a unit.
 // idle -> converting -> done (-> idle again once new files are added)
 let queuePhase = "idle";
+let isZipping = false;
 
 const videoSupported = typeof window.VideoEncoder !== "undefined" && typeof window.VideoDecoder !== "undefined";
+
+// ---------------------------------------------------------------
+// Sequential conversion queue — guarantees only one file converts
+// at a time, whether triggered by a single row's "Convert" button
+// or by "Convert N files". Both funnel through enqueueConvert().
+// ---------------------------------------------------------------
+let conversionQueue = [];
+let isProcessingQueue = false;
+
+function enqueueConvert(id) {
+  if (!conversionQueue.includes(id)) conversionQueue.push(id);
+  runConversionQueue();
+}
+
+async function runConversionQueue() {
+  if (isProcessingQueue) return;
+  isProcessingQueue = true;
+  queuePhase = "converting";
+  render();
+
+  while (conversionQueue.length) {
+    const id = conversionQueue.shift();
+    await convertItem(id);
+  }
+
+  isProcessingQueue = false;
+  queuePhase = "done";
+  render();
+}
 
 // ---------------------------------------------------------------
 // File intake
@@ -165,6 +211,8 @@ function render() {
 }
 
 function updateActionBar() {
+  if (isZipping) return; // preserve the "Zipping..." UI as-is
+
   const total = items.size;
 
   // Remove all stays enabled and functional throughout — a person
@@ -218,10 +266,6 @@ function renderItem(item) {
 
   const formatWrap = document.createElement("div");
   formatWrap.className = "item-format";
-  // Hidden once this item starts converting, once it's done, or the
-  // moment "Convert N files" fires (so waiting-their-turn rows hide
-  // immediately too) — and it stays hidden after conversion completes.
-  formatWrap.hidden = item.status === "converting" || item.status === "done" || queuePhase === "converting";
 
   const label = document.createElement("label");
   label.textContent = "Output:";
@@ -231,6 +275,9 @@ function renderItem(item) {
   selectWrap.className = "select-wrap";
 
   const select = document.createElement("select");
+  // Stays visible always — just disabled while this item is actively
+  // converting, waiting its turn in a queue run, or already done.
+  select.disabled = item.status === "done" || queuePhase === "converting";
   const choices = item.kind === "image" ? ["jpg", "png", "webp"] : ["mp4", "webm"];
   const sourceNorm = item.ext === "jpeg" ? "jpg" : item.ext;
   for (const choice of choices) {
@@ -269,7 +316,7 @@ function renderItem(item) {
     // N files" run is in progress and this item hasn't started yet —
     // only the actively-converting row's "Converting…" label shows.
     btn.hidden = queuePhase === "converting" && item.status !== "converting";
-    btn.addEventListener("click", () => convertItem(item.id));
+    btn.addEventListener("click", () => enqueueConvert(item.id));
     action.appendChild(btn);
   }
 
@@ -444,7 +491,7 @@ removeAllBtn.addEventListener("click", () => {
   render();
 });
 
-convertFilesBtn.addEventListener("click", async () => {
+convertFilesBtn.addEventListener("click", () => {
   if (convertFilesBtn.disabled) return;
 
   if (convertFilesBtn.dataset.mode === "download") {
@@ -452,23 +499,62 @@ convertFilesBtn.addEventListener("click", async () => {
     return;
   }
 
-  queuePhase = "converting";
-  render();
-
   const pending = [...items.values()].filter((i) => i.status === "pending" || i.status === "error");
-  for (const item of pending) {
-    await convertItem(item.id);
-  }
-
-  queuePhase = "done";
-  render();
+  for (const item of pending) enqueueConvert(item.id);
 });
 
-function downloadAllAsZip() {
-  // Intentionally not wired up yet — zip functionality is on hold.
-  // When ready: lazy-load fflate the same way mediabunny is loaded
-  // above, build { filename: Uint8Array } from each item's
-  // resultBlob, and zip with fflate's async zip() (not zipSync())
-  // so large batches don't freeze the tab.
-  console.log("Download all as .zip — not implemented yet.");
+async function downloadAllAsZip() {
+  const done = [...items.values()].filter((i) => i.status === "done");
+  if (done.length === 0) return;
+
+  const originalLabel = convertFilesLabel.textContent;
+  isZipping = true;
+  convertFilesBtn.disabled = true;
+  removeAllBtn.disabled = true;
+  convertFilesLabel.textContent = "Zipping...";
+
+  try {
+    const { zip } = fflate || (await loadFflate());
+
+    // Build { filename: Uint8Array }, disambiguating any output
+    // filenames that would otherwise collide.
+    const files = {};
+    const usedNames = new Set();
+    for (const item of done) {
+      let name = swapExt(item.file.name, item.targetFormat);
+      if (usedNames.has(name)) {
+        const dot = name.lastIndexOf(".");
+        const base = dot > -1 ? name.slice(0, dot) : name;
+        const ext = dot > -1 ? name.slice(dot) : "";
+        let n = 2;
+        while (usedNames.has(`${base} (${n})${ext}`)) n++;
+        name = `${base} (${n})${ext}`;
+      }
+      usedNames.add(name);
+      files[name] = new Uint8Array(await item.resultBlob.arrayBuffer());
+    }
+
+    // zip() is async and can use worker threads internally, so it
+    // won't freeze the tab the way zipSync() would on larger batches.
+    const zipped = await new Promise((resolve, reject) => {
+      zip(files, (err, data) => (err ? reject(err) : resolve(data)));
+    });
+
+    const blob = new Blob([zipped], { type: "application/zip" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "converted-files.zip";
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error(err);
+    alert("Couldn't build the zip: " + (err?.message || "unknown error"));
+  } finally {
+    isZipping = false;
+    convertFilesBtn.disabled = false;
+    removeAllBtn.disabled = false;
+    convertFilesLabel.textContent = originalLabel;
+    updateActionBar();
+  }
 }
