@@ -24,6 +24,7 @@
   --warn: #f5a623;
   --error: #f2705f;
   --support-success: #42be65;
+  --support-error: #fa4d56;
 
   /* Button-component tokens (Carbon-style naming, per component spec) */
   --background-hover: rgba(141, 141, 141, 0.16); /* #8D8D8D @ 16% */
@@ -374,10 +375,12 @@ h1 {
   color: var(--text-secondary);
   display: flex;
   align-items: center;
+  gap: 4px;
   margin: 0;
 }
 
 .item-meta .arrow-result { color: var(--support-success); }
+.item-meta .arrow-result.is-larger { color: var(--support-error); }
 .item-meta .error-text { color: var(--error); }
 
 .item-format {
@@ -413,7 +416,10 @@ h1 {
 }
 
 .item-format select:hover:not(:disabled) { background-color: var(--background-hover); }
-.item-format select:disabled { color: var(--text-disabled); cursor: not-allowed; }
+.item-format select:disabled {
+  color: var(--text-primary);
+  cursor: not-allowed;
+}
 .item-format select:focus { outline: 1px solid #ffffff; }
 
 .item-format .select-chevron {
@@ -425,6 +431,10 @@ h1 {
   height: 16px;
   color: var(--text-primary);
   pointer-events: none;
+}
+
+.item-format select:disabled + .select-chevron {
+  color: var(--icon-on-color-disabled);
 }
 
 .item-progress {
