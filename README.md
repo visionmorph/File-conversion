@@ -1,20 +1,35 @@
-# File conversion
+# File Conversion
 
-An image and video converter that runs entirely in the browser.
-Your data isn't uploaded to a server, your files never leave the browser.
+A browser-based audio, image, and video converter. All processing happens locally in your browser so that your files are never uploaded or sent to a server.
 
-- **Images** (jpg ↔ png ↔ webp) are converted with the Canvas API from your browser.
-- **Video** (mp4 ↔ webm) is converted with [mediabunny](https://mediabunny.dev),
-  which wraps the browser's own WebCodecs API for hardware-accelerated
-  encode/decode.
-- **Zip downloads** when downloading multiple converted files at once
-  uses [fflate](https://github.com/101arrowz/fflate).
-- **Fonts**: Inter, loaded from Google Fonts.
+https://visionmorph.github.io/File-conversion/
+
+## Accepted file types
+
+| File type  | Kind                 | Primary path        | Fallback                               |
+| ---------- | -------------------- | ------------------- | -------------------------------------- |
+| mp3        | Audio                | MediaBunny          | LAME via @mediabunny/mp3-encoder (CDN) |
+| ogg        | Audio                | MediaBunny          | —                                      |
+| wav        | Audio                | MediaBunny          | —                                      |
+| avif       | Image                | Canvas API          | libavif via @jsquash/avif (CDN)        |
+| jpg / jpeg | Image                | Canvas API          | —                                      |
+| png        | Image                | Canvas API          | —                                      |
+| webp       | Image                | Canvas API          | —                                      |
+| mkv        | Video                | MediaBunny          | —                                      |
+| mov        | Video                | MediaBunny          | —                                      |
+| mp4        | Video                | MediaBunny          | —                                      |
+| webm       | Video                | MediaBunny          | —                                      |
+
+## Notes
+
+- **Images** are converted with the browser's Canvas API.
+- **Audio and video** are converted with [MediaBunny](https://mediabunny.dev), which uses the browser's WebCodecs API when available.
+- **Zip downloads** for multiple converted files are created with [fflate](https://github.com/101arrowz/fflate).
 
 ## Files
 
-```
-index.html   markup + drop zone + queue
-style.css    all styling
-app.js       all logic (file intake, image + video conversion, UI)
+```text
+index.html   Markup, drop zone, and conversion queue
+style.css    Styling
+app.js       Conversion logic, file handling, and UI
 ```
