@@ -18,9 +18,11 @@ const FFLATE_CDN_URL = "https://esm.sh/fflate";
 
 const IMAGE_EXTS = ["jpg", "jpeg", "png", "webp", "avif"];
 const VIDEO_EXTS = ["mp4", "webm", "mov", "mkv"];
+const AUDIO_EXTS = ["mp3", "wav", "ogg"];
 
 const IMAGE_MIME = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp", avif: "image/avif" };
-const VIDEO_MIME = { mp4: "video/mp4", webm: "video/webm", mp3: "audio/mpeg" };
+const MEDIA_MIME = { mp4: "video/mp4", webm: "video/webm", mp3: "audio/mpeg", wav: "audio/wav", ogg: "audio/ogg" };
+const AUDIO_ONLY_FORMATS = ["mp3", "wav", "ogg"];
 
 // Populated lazily on first video conversion so the page loads
 // instantly even if the CDN is briefly slow.
@@ -151,6 +153,7 @@ function extOf(filename) {
 function kindOf(ext) {
   if (IMAGE_EXTS.includes(ext)) return "image";
   if (VIDEO_EXTS.includes(ext)) return "video";
+  if (AUDIO_EXTS.includes(ext)) return "audio";
   return null;
 }
 
@@ -164,6 +167,8 @@ function addFiles(fileList) {
     const id = String(nextId++);
     const defaultTarget = kind === "image"
       ? (ext === "jpg" || ext === "jpeg" ? "png" : "jpg")
+      : kind === "audio"
+      ? (ext === "mp3" ? "wav" : "mp3")
       : (ext === "mp4" ? "webm" : "mp4");
 
     items.set(id, {
@@ -279,7 +284,11 @@ function createFormatDropdown(item, isReadOnly) {
   wrap.className = "select-wrap";
 
   const uid = `format-${item.id}`;
-  const choices = item.kind === "image" ? ["jpg", "png", "webp", "avif"] : ["mp4", "webm", "mp3"];
+  const choices = item.kind === "image"
+    ? ["jpg", "png", "webp", "avif"]
+    : item.kind === "audio"
+    ? ["mp3", "wav", "ogg"]
+    : ["mp4", "webm", "mp3", "wav", "ogg"];
   const sourceNorm = item.ext === "jpeg" ? "jpg" : item.ext;
   const available = choices.filter((c) => c !== sourceNorm);
   let activeIndex = Math.max(0, available.indexOf(item.targetFormat));
@@ -551,7 +560,7 @@ async function convertItem(id) {
   try {
     const blob = item.kind === "image"
       ? await convertImage(item, (p) => updateProgress(id, p))
-      : await convertVideo(item, (p) => updateProgress(id, p));
+      : await convertMedia(item, (p) => updateProgress(id, p));
 
     if (item.resultUrl) URL.revokeObjectURL(item.resultUrl);
     item.resultBlob = blob;
@@ -630,9 +639,9 @@ async function convertImage(item, onProgress) {
   return blob;
 }
 
-// --- video ------------------------------------------------------
+// --- video + audio ------------------------------------------------
 
-async function convertVideo(item, onProgress) {
+async function convertMedia(item, onProgress) {
   onProgress(0.02);
   const mb = mediabunny || (await loadMediabunny());
   const {
@@ -645,6 +654,8 @@ async function convertVideo(item, onProgress) {
     Mp4OutputFormat,
     WebMOutputFormat,
     Mp3OutputFormat,
+    WavOutputFormat,
+    OggOutputFormat,
     canEncodeAudio,
   } = mb;
 
@@ -653,12 +664,14 @@ async function convertVideo(item, onProgress) {
     formats: ALL_FORMATS,
   });
 
-  const isAudioOnly = item.targetFormat === "mp3";
+  const isAudioOnly = AUDIO_ONLY_FORMATS.includes(item.targetFormat);
 
   let outputFormat;
   if (item.targetFormat === "mp4") outputFormat = new Mp4OutputFormat();
   else if (item.targetFormat === "webm") outputFormat = new WebMOutputFormat();
-  else outputFormat = new Mp3OutputFormat();
+  else if (item.targetFormat === "mp3") outputFormat = new Mp3OutputFormat();
+  else if (item.targetFormat === "wav") outputFormat = new WavOutputFormat();
+  else outputFormat = new OggOutputFormat();
 
   const output = new Output({
     format: outputFormat,
@@ -668,12 +681,15 @@ async function convertVideo(item, onProgress) {
   const conversionOptions = { input, output };
 
   if (isAudioOnly) {
-    // .mp3 is audio-only — drop the video track entirely.
+    // mp3/wav/ogg are audio-only — drop any video track. Harmless
+    // no-op when the source was already audio-only (nothing to drop).
     conversionOptions.video = { discard: true };
 
     // Most browsers can't encode MP3 natively via WebCodecs. Only pull
     // in the ~130kB WASM (LAME) encoder if native support is missing.
-    if (!(await canEncodeAudio("mp3"))) {
+    // WAV (raw PCM) and OGG (Opus, natively supported by WebCodecs)
+    // need no such fallback.
+    if (item.targetFormat === "mp3" && !(await canEncodeAudio("mp3"))) {
       const { registerMp3Encoder } = mp3Encoder || (await loadMp3Encoder());
       registerMp3Encoder();
     }
@@ -691,7 +707,7 @@ async function convertVideo(item, onProgress) {
   await conversion.execute();
   onProgress(1);
 
-  return new Blob([output.target.buffer], { type: VIDEO_MIME[item.targetFormat] });
+  return new Blob([output.target.buffer], { type: MEDIA_MIME[item.targetFormat] });
 }
 
 // ---------------------------------------------------------------
