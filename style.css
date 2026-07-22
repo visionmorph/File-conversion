@@ -34,6 +34,8 @@
   --layer-hover-01: #343a3f;
   --layer-02: #343a3f;
   --layer-hover-02: #4d5358;
+  --layer-selected-02: #4d5358;
+  --selected-hover-layer-02: #697077;
   --border-strong-01: #697077;
   --border-inverse: #ffffff;
   --button-disabled: #4d5358;
@@ -458,7 +460,7 @@ h1 {
   list-style: none;
   margin: 0;
   padding: 4px 0;
-  background: var(--surface);
+  background: var(--layer-02);
   border: 1px solid var(--border-strong-01);
 }
 .select-list[hidden] { display: none; }
@@ -480,7 +482,16 @@ h1 {
 
 .select-option:hover,
 .select-option.is-active {
-  background-color: var(--background-hover);
+  background-color: var(--layer-hover-02);
+}
+
+.select-option[aria-selected="true"] {
+  background-color: var(--layer-selected-02);
+}
+
+.select-option[aria-selected="true"]:hover,
+.select-option[aria-selected="true"].is-active {
+  background-color: var(--selected-hover-layer-02);
 }
 
 .select-option .option-check {
