@@ -480,8 +480,7 @@ h1 {
   cursor: pointer;
 }
 
-.select-option:hover,
-.select-option.is-active {
+.select-option:hover {
   background-color: var(--layer-hover-02);
 }
 
@@ -489,8 +488,7 @@ h1 {
   background-color: var(--layer-selected-02);
 }
 
-.select-option[aria-selected="true"]:hover,
-.select-option[aria-selected="true"].is-active {
+.select-option[aria-selected="true"]:hover {
   background-color: var(--layer-selected-hover-02);
 }
 
