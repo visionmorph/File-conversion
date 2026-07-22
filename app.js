@@ -16,10 +16,10 @@ const MEDIABUNNY_CDN_URL = "https://esm.sh/mediabunny";
 // Used for the "Download all (.zip)" button.
 const FFLATE_CDN_URL = "https://esm.sh/fflate";
 
-const IMAGE_EXTS = ["jpg", "jpeg", "png", "webp"];
+const IMAGE_EXTS = ["jpg", "jpeg", "png", "webp", "avif"];
 const VIDEO_EXTS = ["mp4", "webm", "mov", "mkv"];
 
-const IMAGE_MIME = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp" };
+const IMAGE_MIME = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp", avif: "image/avif" };
 const VIDEO_MIME = { mp4: "video/mp4", webm: "video/webm", mp3: "audio/mpeg" };
 
 // Populated lazily on first video conversion so the page loads
@@ -65,6 +65,24 @@ function loadMp3Encoder() {
     });
   }
   return mp3EncoderLoadPromise;
+}
+
+// Canvas can only encode AVIF natively in Chrome/Edge (124+) today.
+// This WASM (libavif, via jSquash) encoder is the fallback for every
+// other browser — loaded only when someone converts to .avif and the
+// native path isn't available.
+const AVIF_ENCODER_CDN_URL = "https://esm.sh/@jsquash/avif";
+let avifEncoder = null;
+let avifEncoderLoadPromise = null;
+
+function loadAvifEncoder() {
+  if (!avifEncoderLoadPromise) {
+    avifEncoderLoadPromise = import(AVIF_ENCODER_CDN_URL).then((mod) => {
+      avifEncoder = mod;
+      return mod;
+    });
+  }
+  return avifEncoderLoadPromise;
 }
 
 // ---------------------------------------------------------------
@@ -261,7 +279,7 @@ function createFormatDropdown(item, isReadOnly) {
   wrap.className = "select-wrap";
 
   const uid = `format-${item.id}`;
-  const choices = item.kind === "image" ? ["jpg", "png", "webp"] : ["mp4", "webm", "mp3"];
+  const choices = item.kind === "image" ? ["jpg", "png", "webp", "avif"] : ["mp4", "webm", "mp3"];
   const sourceNorm = item.ext === "jpeg" ? "jpg" : item.ext;
   const available = choices.filter((c) => c !== sourceNorm);
   let activeIndex = Math.max(0, available.indexOf(item.targetFormat));
@@ -577,6 +595,26 @@ async function convertImage(item, onProgress) {
   ctx.drawImage(bitmap, 0, 0);
   bitmap.close();
   onProgress(0.7);
+
+  if (item.targetFormat === "avif") {
+    // Try the native, fast path first. Browsers that don't support
+    // AVIF encoding silently hand back a PNG instead of erroring, so
+    // the only reliable check is inspecting the blob's actual type.
+    const nativeBlob = await new Promise((resolve) => {
+      canvas.toBlob((b) => resolve(b), "image/avif");
+    });
+    if (nativeBlob && nativeBlob.type === "image/avif") {
+      onProgress(1);
+      return nativeBlob;
+    }
+
+    // No native support — fall back to the WASM (libavif) encoder.
+    const { encode } = avifEncoder || (await loadAvifEncoder());
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const avifBuffer = await encode(imageData);
+    onProgress(1);
+    return new Blob([avifBuffer], { type: "image/avif" });
+  }
 
   const mime = IMAGE_MIME[item.targetFormat];
   const quality = item.targetFormat === "png" ? undefined : 0.92;
