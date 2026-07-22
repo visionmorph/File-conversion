@@ -21,7 +21,7 @@ const VIDEO_EXTS = ["mp4", "webm", "mov", "mkv"];
 const AUDIO_EXTS = ["mp3", "wav", "ogg"];
 
 const IMAGE_MIME = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp", avif: "image/avif" };
-const MEDIA_MIME = { mp4: "video/mp4", webm: "video/webm", mp3: "audio/mpeg", wav: "audio/wav", ogg: "audio/ogg" };
+const MEDIA_MIME = { mp4: "video/mp4", webm: "video/webm", mov: "video/quicktime", mkv: "video/x-matroska", mp3: "audio/mpeg", wav: "audio/wav", ogg: "audio/ogg" };
 const AUDIO_ONLY_FORMATS = ["mp3", "wav", "ogg"];
 
 // Populated lazily on first video conversion so the page loads
@@ -288,7 +288,7 @@ function createFormatDropdown(item, isReadOnly) {
     ? ["jpg", "png", "webp", "avif"]
     : item.kind === "audio"
     ? ["mp3", "wav", "ogg"]
-    : ["mp4", "webm", "mp3", "wav", "ogg"];
+    : ["mp4", "webm", "mov", "mkv", "mp3", "wav", "ogg"];
   const sourceNorm = item.ext === "jpeg" ? "jpg" : item.ext;
   const available = choices.filter((c) => c !== sourceNorm);
   let activeIndex = Math.max(0, available.indexOf(item.targetFormat));
@@ -653,6 +653,8 @@ async function convertMedia(item, onProgress) {
     BufferTarget,
     Mp4OutputFormat,
     WebMOutputFormat,
+    MovOutputFormat,
+    MkvOutputFormat,
     Mp3OutputFormat,
     WavOutputFormat,
     OggOutputFormat,
@@ -669,6 +671,8 @@ async function convertMedia(item, onProgress) {
   let outputFormat;
   if (item.targetFormat === "mp4") outputFormat = new Mp4OutputFormat();
   else if (item.targetFormat === "webm") outputFormat = new WebMOutputFormat();
+  else if (item.targetFormat === "mov") outputFormat = new MovOutputFormat();
+  else if (item.targetFormat === "mkv") outputFormat = new MkvOutputFormat();
   else if (item.targetFormat === "mp3") outputFormat = new Mp3OutputFormat();
   else if (item.targetFormat === "wav") outputFormat = new WavOutputFormat();
   else outputFormat = new OggOutputFormat();
